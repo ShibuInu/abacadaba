@@ -11,10 +11,20 @@ document.addEventListener("DOMContentLoaded", () => {
  
    const keys = document.querySelectorAll(".keyboard-row button");
  
-   function getNewWord() {
-      /* fix this */
-   }
- 
+   async function getNewWord() {
+    try {
+      const response = await fetch('https://raw.githubusercontent.com/ShibuInu/abacadaba/main/js/words.txt');
+      const wordsText = await response.text();
+      const wordsArray = wordsText.split('\n');
+      const randomIndex = Math.floor(Math.random() * wordsArray.length);
+      word = wordsArray[randomIndex].trim().toLowerCase();
+  
+      console.log("Selected word:", word); // Print the selected word to the console
+    } catch (error) {
+      console.error('Error fetching or processing the word:', error);
+    }
+  }
+
    function getCurrentWordArr() {
      const numberOfGuessedWords = guessedWords.length;
      return guessedWords[numberOfGuessedWords - 1];
@@ -49,23 +59,54 @@ document.addEventListener("DOMContentLoaded", () => {
  
      return "rgb(181, 159, 59)";
    }
- 
+
    function handleSubmitWord() {
-      const currentWordArr = getCurrentWordArr()
-      if (currentWordArr.length !==5) {
-         window.alert("Word must be 5 letters")
-      }
-
-      const currentWord = currentWordArr.join('')
-
-      if (currentWord === word) {
-         window.alert("Congratulations!")
-      }
-      /* fix this too */
-
-      guessedWords.push()
-   }
- 
+    const currentWordArr = getCurrentWordArr();
+    if (currentWordArr.length !== 5) {
+      window.alert("Word must be 5 letters");
+    }
+  
+    const currentWord = currentWordArr.join("");
+  
+    // Fetch the word from the specified URL
+    fetch('https://raw.githubusercontent.com/ShibuInu/abacadaba/main/js/words.txt')
+      .then(response => response.text())
+      .then(wordsText => {
+        const wordsArray = wordsText.split('\n');
+        const randomIndex = Math.floor(Math.random() * wordsArray.length);
+        const actualWord = wordsArray[randomIndex].trim().toLowerCase();
+  
+        const firstLetterId = guessedWordCount * 5 + 1;
+        const interval = 200;
+        currentWordArr.forEach((letter, index) => {
+          setTimeout(() => {
+            const tileColor = getTileColor(letter, index);
+  
+            const letterId = firstLetterId + index;
+            const letterEl = document.getElementById(letterId);
+            letterEl.classList.add("animate__flipInX");
+            letterEl.style = `background-color:${tileColor};border-color:${tileColor}`;
+          }, interval * index);
+        });
+  
+        guessedWordCount += 1;
+  
+        if (currentWord === actualWord) {
+          window.alert("Congratulations!");
+        }
+  
+        if (guessedWords.length === 6) {
+          window.alert(`Sorry, you have no more guesses! The word is ${actualWord}.`);
+        }
+  
+        guessedWords.push([]);
+      })
+      .catch(() => {
+        window.alert("Error fetching word or processing it!");
+      });
+  }
+  
+   
    function createSquares() {
      const gameBoard = document.getElementById("board");
  
